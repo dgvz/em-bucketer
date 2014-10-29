@@ -1,4 +1,4 @@
-module Bucketizer
+module Bucketer
   # This is a purpose built class for storing arbitrary
   # objects in buckets then calling callbacks when any
   # of those buckets exceed a certain pre-specified
@@ -12,7 +12,7 @@ module Bucketizer
     BUCKET_MAX_SIZE_DEFAULT = 1000
     BUCKET_MAX_AGE_DEFAULT = 3600
 
-    # Creates a new in memory Bucketizer with the requested
+    # Creates a new in memory Bucketer with the requested
     # configurations
     #
     # @param bucket_threshold_size [Integer] the max size of the bucket

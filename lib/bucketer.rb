@@ -1,6 +1,6 @@
-require "bucketizer/version"
+require "bucketer/version"
 
-module Bucketizer
+module Bucketer
 end
 
-require 'bucketizer/in_memory'
+require 'bucketer/in_memory'

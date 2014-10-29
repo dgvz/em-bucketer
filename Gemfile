@@ -1,4 +1,4 @@
 source 'https://rubygems.org'
 
-# Specify your gem's dependencies in bucketizer.gemspec
+# Specify your gem's dependencies in bucketer.gemspec
 gemspec

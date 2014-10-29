@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'bucketizer/version'
+require 'bucketer/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "bucketizer"
-  spec.version       = Bucketizer::VERSION
+  spec.name          = "bucketer"
+  spec.version       = Bucketer::VERSION
   spec.authors       = ["Dylan Griffith"]
   spec.email         = ["dyl.griffith@gmail.com"]
   spec.summary       = %q{A generic class for storing arbitrary objects in buckets with callbacks on threshold reached}
