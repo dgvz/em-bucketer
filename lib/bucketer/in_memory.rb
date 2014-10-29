@@ -9,7 +9,7 @@ module Bucketer
   # returns this would mean clients would need to change
   # later if we decided to use redis.
   class InMemory
-    BUCKET_MAX_SIZE_DEFAULT = 1000
+    BUCKET_THRESHOLD_SIZE_DEFAULT = 1000
     BUCKET_MAX_AGE_DEFAULT = 3600
 
     # Creates a new in memory Bucketer with the requested
@@ -19,7 +19,7 @@ module Bucketer
     # after which the on_bucket_full callback is called
     # @param bucket_max_age [Integer] max number of seconds a bucket
     # can remain before the on_bucket_timed_out is called
-    def initialize(bucket_threshold_size: BUCKET_MAX_SIZE_DEFAULT, bucket_max_age: BUCKET_MAX_AGE_DEFAULT)
+    def initialize(bucket_threshold_size: BUCKET_THRESHOLD_SIZE_DEFAULT, bucket_max_age: BUCKET_MAX_AGE_DEFAULT)
       @bucket_threshold_size = bucket_threshold_size
       @bucket_max_age = bucket_max_age
       @buckets = {}
@@ -36,7 +36,7 @@ module Bucketer
     # @param item [Object] the item to be
     # placed in the bucket
     def add_item(bucket_id, item_id, item, &blk)
-      bucket_add_to_db(bucket_id, item_id, item, &blk)
+      add_bucket_to_db(bucket_id, item_id, item, &blk)
       check_bucket_full(bucket_id)
     end
 
@@ -114,7 +114,7 @@ module Bucketer
       blk.call @buckets[bucket_id].size
     end
 
-    def bucket_add_to_db(bucket_id, item_id, item, &blk)
+    def add_bucket_to_db(bucket_id, item_id, item, &blk)
       @buckets[bucket_id] ||= {}
       @buckets[bucket_id][item_id] = item
       blk.call if block_given?
