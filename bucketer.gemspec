@@ -6,11 +6,11 @@ require 'bucketer/version'
 Gem::Specification.new do |spec|
   spec.name          = "bucketer"
   spec.version       = Bucketer::VERSION
-  spec.authors       = ["Dylan Griffith"]
+  spec.authors       = ["Richard Heycock", "Dylan Griffith"]
   spec.email         = ["dyl.griffith@gmail.com"]
   spec.summary       = %q{A generic class for storing arbitrary objects in buckets with callbacks on threshold reached}
-  spec.homepage      = ""
-  spec.license       = "MIT"
+  spec.homepage      = "https://github.com/dgvz/bucketer"
+  spec.license       = "GPL"
 
   spec.files         = `git ls-files -z`.split("\x0")
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
