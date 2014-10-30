@@ -25,6 +25,12 @@ bucketer = Bucketer::InMemory.new(:bucket_threshold_size => 5)
 
 bucketer.on_bucket_full do |bucket_id|
   p "yay bucket #{bucket_id} filled up!"
+
+  bucketer.get_and_empty_bucket(bucket_id) do |items|
+    items.each do |item|
+      p "got back #{item}"
+    end
+  end
 end
 
 bucketer.add_item("1", "1", {:foo => :bar})
