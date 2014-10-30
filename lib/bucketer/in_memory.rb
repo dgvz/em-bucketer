@@ -1,3 +1,5 @@
+require 'eventmachine'
+
 module Bucketer
   # This is a purpose built class for storing arbitrary
   # objects in buckets then calling callbacks when any
@@ -37,8 +39,11 @@ module Bucketer
     # @param item [Object] the item to be
     # placed in the bucket
     def add_item(bucket_id, item_id, item, &blk)
-      add_bucket_to_db(bucket_id, item_id, item, &blk)
-      check_bucket_full(bucket_id)
+      EM::Completion.new.tap do |c|
+        c.callback(&blk) if block_given?
+        add_bucket_to_db(bucket_id, item_id, item) { c.succeed }
+        check_bucket_full(bucket_id)
+      end
     end
 
     # Used to set a callback hook for when a bucket
@@ -61,8 +66,11 @@ module Bucketer
     # @yield [Array] the items you put
     # into the bucket
     def get_bucket(bucket_id, &blk)
-      get_bucket_from_db(bucket_id) do |bucket|
-        blk.call bucket.values
+      EM::Completion.new.tap do |c|
+        c.callback(&blk) if block_given?
+        get_bucket_from_db(bucket_id) do |bucket|
+          c.succeed bucket.values
+        end
       end
     end
 
@@ -73,9 +81,12 @@ module Bucketer
     # @yield [Array] the items you put
     # into the bucket
     def get_and_empty_bucket(bucket_id, &blk)
-      get_bucket(bucket_id) do |contents|
-        empty_bucket(bucket_id) do
-          blk.call contents
+      EM::Completion.new.tap do |c|
+        c.callback(&blk) if block_given?
+        get_bucket(bucket_id) do |contents|
+          empty_bucket(bucket_id) do
+            c.succeed contents
+          end
         end
       end
     end
@@ -85,8 +96,11 @@ module Bucketer
     # @param bucket_id [String] the bucket id
     # of the bucket you want to empty
     def empty_bucket(bucket_id, &blk)
-      empty_bucket_in_db(bucket_id) do
-        blk.call if block_given?
+      EM::Completion.new.tap do |c|
+        c.callback(&blk) if block_given?
+        empty_bucket_in_db(bucket_id) do
+          c.succeed
+        end
       end
     end
 
