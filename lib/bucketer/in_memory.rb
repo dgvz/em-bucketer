@@ -23,6 +23,7 @@ module Bucketer
       @bucket_threshold_size = bucket_threshold_size
       @bucket_max_age = bucket_max_age
       @buckets = {}
+      @on_bucket_full_callbacks = []
     end
 
     # Adds a item to the specified bucket and
@@ -50,7 +51,6 @@ module Bucketer
     #
     # @yield [String] The bucket id of the full bucket
     def on_bucket_full(&blk)
-      @on_bucket_full_callbacks ||= []
       @on_bucket_full_callbacks << blk
     end
 
