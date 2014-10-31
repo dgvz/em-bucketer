@@ -1,6 +1,6 @@
 require 'eventmachine'
 
-module Bucketer
+module EventMachine::Bucketer
   # This is a purpose built class for storing arbitrary
   # objects in buckets then calling callbacks when any
   # of those buckets exceed a certain pre-specified

@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'bucketer'
+require 'em-bucketer'
 
 shared_examples "a bucketer" do
   describe '#add_item' do

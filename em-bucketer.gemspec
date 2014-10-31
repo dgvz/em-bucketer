@@ -1,15 +1,15 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'bucketer/version'
+require 'em-bucketer/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "bucketer"
-  spec.version       = Bucketer::VERSION
+  spec.name          = "em-bucketer"
+  spec.version       = EventMachine::Bucketer::VERSION
   spec.authors       = ["Richard Heycock", "Dylan Griffith"]
   spec.email         = ["dyl.griffith@gmail.com"]
-  spec.summary       = %q{A generic class for storing arbitrary objects in buckets with callbacks on threshold reached}
-  spec.homepage      = "https://github.com/dgvz/bucketer"
+  spec.summary       = %q{A generic eventmachine library for storing arbitrary objects in buckets with callbacks on threshold reached}
+  spec.homepage      = "https://github.com/dgvz/em-bucketer"
   spec.license       = "GPL"
 
   spec.files         = `git ls-files -z`.split("\x0")

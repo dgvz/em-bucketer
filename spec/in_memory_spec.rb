@@ -1,8 +1,8 @@
 require 'spec_helper'
-require 'bucketer'
+require 'em-bucketer'
 
-describe Bucketer::InMemory do
+describe EventMachine::Bucketer::InMemory do
   it_behaves_like "a bucketer" do
-    let(:bucketer) { Bucketer::InMemory.new(:bucket_threshold_size => 5) }
+    let(:bucketer) { EM::Bucketer::InMemory.new(:bucket_threshold_size => 5) }
   end
 end
