@@ -1,8 +1,11 @@
 # EventMachine::Bucketer
 
-This is a generic EventMachine library for putting arbitrary objects into buckets and setting callbacks to be called when any bucket exceeds a specific threshold size. Although the `Bucketer::InMemory` is synchronous (it's just using a ruby hash) the interface is still what would be expected for an asynchronous API for consistency with other Bucketers to be implemented in future.
-
-Currently an in memory bucketer is supported, however it is intended that a redis backed bucketer will be added later and it will be using em-hiredis gem for redis interaction and it will actually be asynchronous.
+This is a generic EventMachine library for putting arbitrary objects into
+buckets and setting callbacks to be called when any bucket exceeds a specific
+threshold size. Although the `Bucketer::InMemory` is synchronous (it's just
+using a ruby hash) the interface is still what would be expected for an
+asynchronous API for consistency with other Bucketers that are actually
+asynchronous.
 
 ## Installation
 
@@ -43,6 +46,13 @@ EM.run do
   bucketer.add_item("1", "5", {:bar => :foo})
 end
 ```
+
+## Redis Bucketer
+
+This gem also supports a redis backed bucketer which uses the `em-hiredis` gem.
+This bucketer uses `Marshal.dump` to store objects in redis and thus there are
+limitations on what can be placed in a bucket. Specifically you cannot store
+procs in buckets using the redis bucketer.
 
 ## Contributing
 
