@@ -16,7 +16,7 @@ module EventMachine::Bucketer
           c.callback(&blk) if block_given?
           @buckets[bucket_id] ||= {}
           @buckets[bucket_id][item_id] = item
-          c.succeed if block_given?
+          c.succeed
         end
       end
 
