@@ -1,4 +1,5 @@
 require 'eventmachine'
+require 'em-bucketer/database/hash'
 
 module EventMachine::Bucketer
   # This is a purpose built class for storing arbitrary
@@ -11,6 +12,8 @@ module EventMachine::Bucketer
   # returns this would mean clients would need to change
   # later if we decided to use redis.
   class InMemory
+    include Database::Hash
+
     BUCKET_THRESHOLD_SIZE_DEFAULT = 1000
     BUCKET_MAX_AGE_DEFAULT = 3600
 
@@ -121,28 +124,5 @@ module EventMachine::Bucketer
         end
       end
     end
-
-    #### BEGIN DATABASE METHODS ####
-    def bucket_size_from_db(bucket_id, &blk)
-      @buckets[bucket_id] ||= {}
-      blk.call @buckets[bucket_id].size
-    end
-
-    def add_bucket_to_db(bucket_id, item_id, item, &blk)
-      @buckets[bucket_id] ||= {}
-      @buckets[bucket_id][item_id] = item
-      blk.call if block_given?
-    end
-
-    def get_bucket_from_db(bucket_id, &blk)
-      @buckets[bucket_id] ||= {}
-      blk.call @buckets[bucket_id]
-    end
-
-    def empty_bucket_in_db(bucket_id, &blk)
-      @buckets[bucket_id] = {}
-      blk.call
-    end
-    #### END DATABASE METHODS ####
   end
 end
