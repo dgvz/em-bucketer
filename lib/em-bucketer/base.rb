@@ -136,6 +136,7 @@ module EventMachine::Bucketer
     end
 
     def add_timer_if_first(bucket_id)
+      return unless @bucket_max_age
       if @buckets_with_timers.add?(bucket_id)
         EM.add_timer(@bucket_max_age) do
           @on_bucket_timeout_callbacks.each do |callback|
