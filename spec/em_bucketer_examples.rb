@@ -30,6 +30,25 @@ shared_examples "a bucketer" do
       end
     end
 
+    it 'handles multiple buckets' do
+      EM.run do
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
+        bucketer.on_bucket_full do |bucket_id|
+          fail "shouldn't have called full"
+        end
+
+        add_n_items(bucketer, "1", 3) do
+          add_n_items(bucketer, "2", 3) do
+
+            bucketer.get_bucket("1") do |bucket|
+              expect(bucket).to eq([{:id => 0}, {:id => 1}, {:id => 2}])
+              EM.stop
+            end
+          end
+        end
+      end
+    end
+
     it 'calls on_bucket_full when a bucket fills up' do
       EM.run do
         EM.add_timer(0.1) { fail "didn't reach EM.stop" }
