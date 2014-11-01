@@ -62,7 +62,8 @@ shared_examples "a bucketer" do
   describe '#on_bucket_timeout' do
     it 'calls the block when the timer times out' do
       ran = false
-      EM.run_block do
+      EM.run do
+        EM.add_timer(0.05) { EM.stop }
         # Stub out the timer that the bucketer uses
         allow(EM).to receive(:add_timer).and_yield
         bucketer.on_bucket_timeout do |bucket_id|
@@ -75,7 +76,8 @@ shared_examples "a bucketer" do
     end
 
     it 'doesnt call the block when the timer doesnt time out' do
-      EM.run_block do
+      EM.run do
+        EM.add_timer(0.1) { EM.stop }
         allow(EM).to receive(:add_timer)
         bucketer.on_bucket_timeout do |bucket_id|
           fail "shouldn't have called timeout"

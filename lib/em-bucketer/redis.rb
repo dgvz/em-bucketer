@@ -18,6 +18,12 @@ module EventMachine::Bucketer
     # For example you cannot store an object that
     # references a proc as an instance variable.
     #
+    # The redis bucketer also sets all timers on
+    # startup for buckets already in the redis
+    # database. This ensures that even if your
+    # app is restarted the previous timers will still
+    # get set and you won't ever lose a bucket.
+    #
     # @param redis_prefix [String] The prefix for the
     # bucket in redis. This is necessary because you
     # may want to have multiple bucketers using one
@@ -34,7 +40,27 @@ module EventMachine::Bucketer
       @redis = EM::Hiredis.connect
       @redis_prefix = redis_prefix
       setup(bucket_threshold_size, bucket_max_age)
+      set_timers
     end
+
+    def set_timers
+      known_buckets.callback do |bucket_ids|
+        bucket_ids.each do |bucket_id|
+          add_timer_if_first(bucket_id)
+        end
+      end.errback do |e|
+        # I think this is okay since it will only happen when
+        # you are initializing the bucketer so it will hopefully
+        # bring the issue to your attention on startup. I
+        # couldn't actually pass this error back through to
+        # anyone so I needed to raise it. It is also a bad
+        # exception since it means you are not properly reloading
+        # your buckets from redis
+        raise e
+      end
+    end
+
+    private
 
     # Used by Database::Redis
     attr_reader :redis_prefix, :redis
