@@ -4,6 +4,8 @@ require 'em-hiredis'
 module EventMachine::Bucketer
   module Database
     module Redis
+      private
+
       def bucket_size_from_db(bucket_id, &blk)
         EM::Completion.new.tap do |c|
           c.callback(&blk) if block_given?

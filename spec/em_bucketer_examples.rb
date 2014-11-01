@@ -5,7 +5,7 @@ shared_examples "a bucketer" do
   describe '#add_item' do
     it 'adds a item to the bucket' do
       EM.run do
-        EM.add_timer(1) { fail "didn't reach EM.stop" }
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
         bucketer.add_item("1", "2", {:foo => :bar}) do
           bucketer.get_bucket("1") do |bucket|
             expect(bucket).to eq([{:foo => :bar}])
@@ -17,7 +17,7 @@ shared_examples "a bucketer" do
 
     it 'overwrites an existing item with the same id' do
       EM.run do
-        EM.add_timer(1) { fail "didn't reach EM.stop" }
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
         bucketer.add_item("1", "2", {:foo => :bar}) do
           bucketer.add_item("1", "2", {:bar => :foo}) do
 
@@ -32,7 +32,7 @@ shared_examples "a bucketer" do
 
     it 'calls on_bucket_full when a bucket fills up' do
       EM.run do
-        EM.add_timer(1) { fail "didn't reach EM.stop" }
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
         bucketer.on_bucket_full do |bucket_id|
           expect(bucket_id).to eq("1")
           EM.stop
@@ -46,7 +46,7 @@ shared_examples "a bucketer" do
   describe '#empty_bucket' do
     it 'emptys a bucket' do
       EM.run do
-        EM.add_timer(1) { fail "didn't reach EM.stop" }
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
         add_n_items(bucketer, "1", 3) do
           bucketer.empty_bucket("1") do
             bucketer.get_bucket("1") do |bucket|
@@ -59,10 +59,36 @@ shared_examples "a bucketer" do
     end
   end
 
+  describe '#on_bucket_timeout' do
+    it 'calls the block when the timer times out' do
+      ran = false
+      EM.run_block do
+        # Stub out the timer that the bucketer uses
+        allow(EM).to receive(:add_timer).and_yield
+        bucketer.on_bucket_timeout do |bucket_id|
+          ran = true
+          expect(bucket_id).to eq("1")
+        end
+        bucketer.add_item("1", "2", :foo => :bar)
+      end
+      fail "didn't call timeout" unless ran
+    end
+
+    it 'doesnt call the block when the timer doesnt time out' do
+      EM.run_block do
+        allow(EM).to receive(:add_timer)
+        bucketer.on_bucket_timeout do |bucket_id|
+          fail "shouldn't have called timeout"
+        end
+        bucketer.add_item("1", "2", :foo => :bar)
+      end
+    end
+  end
+
   describe '#get_and_empty_bucket' do
     it 'gets the bucket then emptys the bucket' do
       EM.run do
-        EM.add_timer(1) { fail "didn't reach EM.stop" }
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
         add_n_items(bucketer, "1", 3) do
 
           bucketer.get_and_empty_bucket("1") do |bucket|

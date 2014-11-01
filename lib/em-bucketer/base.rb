@@ -5,6 +5,8 @@ module EventMachine::Bucketer
       @bucket_max_age = bucket_max_age
       @buckets = {}
       @on_bucket_full_callbacks = []
+      @on_bucket_timeout_callbacks = []
+      @buckets_with_timers = Set.new
     end
 
     # Adds a item to the specified bucket and
@@ -18,6 +20,7 @@ module EventMachine::Bucketer
     # @param item [Object] the item to be
     # placed in the bucket
     def add_item(bucket_id, item_id, item, &blk)
+      add_timer_if_first(bucket_id)
       EM::Completion.new.tap do |c|
         c.callback(&blk) if block_given?
         add_bucket_to_db(bucket_id, item_id, item).callback do
@@ -40,6 +43,24 @@ module EventMachine::Bucketer
     # @yield [String] The bucket id of the full bucket
     def on_bucket_full(&blk)
       @on_bucket_full_callbacks << blk
+    end
+
+    # Used to set a callback hook for when a bucket
+    # reaches the time limit. It is IMPORTANT
+    # to note that the bucket will not automatically
+    # be emptied you must call empty_bucket if you
+    # want the bucket to be emptied.
+    #
+    # This timer is started once the bucket gets its
+    # first item and is cleared only when the
+    # bucket is emptied. The callback will only be
+    # called once at this time and then not again
+    # unless you empty the bucket and add something
+    # again.
+    #
+    # @yield [String] The bucket id of the full bucket
+    def on_bucket_timeout(&blk)
+      @on_bucket_timeout_callbacks << blk
     end
 
     # Get the contents of a bucket.
@@ -88,6 +109,7 @@ module EventMachine::Bucketer
       EM::Completion.new.tap do |c|
         c.callback(&blk) if block_given?
         empty_bucket_in_db(bucket_id).callback do
+          clear_timer(bucket_id)
           c.succeed
         end.errback do |e|
           c.fail e
@@ -111,6 +133,20 @@ module EventMachine::Bucketer
           end
         end
       end
+    end
+
+    def add_timer_if_first(bucket_id)
+      if @buckets_with_timers.add?(bucket_id)
+        EM.add_timer(@bucket_max_age) do
+          @on_bucket_timeout_callbacks.each do |callback|
+            callback.call bucket_id
+          end
+        end
+      end
+    end
+
+    def clear_timer(bucket_id)
+      @buckets_with_timers.delete(bucket_id)
     end
   end
 end
