@@ -124,4 +124,23 @@ shared_examples "a bucketer" do
       end
     end
   end
+
+  describe '#get_and_remove' do
+    it 'gets 2 items and removes them' do
+      EM.run do
+        EM.add_timer(0.1) { fail "didn't reach EM.stop" }
+        add_n_items(bucketer, "1", 3) do
+
+          bucketer.get_and_remove("1", 2) do |bucket|
+            expect(bucket.count).to eq(2)
+
+            bucketer.get_bucket("1") do |remaining_bucket|
+              expect(remaining_bucket.count).to eq(1)
+              EM.stop
+            end
+          end
+        end
+      end
+    end
+  end
 end

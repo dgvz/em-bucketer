@@ -101,6 +101,39 @@ module EventMachine::Bucketer
       end
     end
 
+    # Get at most `count` number of items from
+    # the bucket and remove them.
+    #
+    # @example get 100 items from the bucket
+    #   bucketer.get_and_remove("1", 100) do |items|
+    #     p "yay I got #{items.count} items"
+    #     items.each do |i|
+    #       p "got #{i}"
+    #     end
+    #   end
+    #
+    # @param bucket_id [String] the bucket id
+    # of the bucket you want to get
+    # @param count [Integer] the number of items
+    # you want from the bucket
+    # @yield [Array] the items you put
+    # into the bucket
+    def get_and_remove(bucket_id, count, &blk)
+      EM::Completion.new.tap do |c|
+        c.callback(&blk) if block_given?
+        get_bucket_from_db(bucket_id).callback do |bucket|
+          empty_bucket(bucket_id).callback do
+            values = []
+            EM::Iterator.new(bucket).each(get_and_remove_iterator(bucket_id, count, values, c), -> { c.succeed(values) })
+          end.errback do |e|
+            c.fail e
+          end
+        end.errback do |e|
+          c.fail e
+        end
+      end
+    end
+
     # Empty a bucket
     #
     # @param bucket_id [String] the bucket id
@@ -118,6 +151,24 @@ module EventMachine::Bucketer
     end
 
     private
+
+    def get_and_remove_iterator(bucket_id, count, values, completion)
+      added = 0
+      proc do |tuple, iter|
+        key, val = tuple[0], tuple[1]
+        if added < count
+          added += 1
+          values << val
+          iter.next
+        else
+          add_item(bucket_id, key, val).callback do
+            iter.next
+          end.errback do |e|
+            completion.fail e
+          end
+        end
+      end
+    end
 
     def bucket_full?(bucket_id, &blk)
       bucket_size_from_db(bucket_id).callback do |size|
