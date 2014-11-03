@@ -21,7 +21,43 @@ Or install it yourself as:
 
     $ gem install em-bucketer
 
-## Usage
+## Ordered Bucketer
+The ordered bucketer adds items to buckets and gives them back in the same
+order in which they were put in.
+
+### Usage
+
+```ruby
+require 'em-bucketer'
+EM.run do
+  bucketer = EM::Bucketer::Ordered::InMemory.new(:bucket_threshold_size => 5)
+
+  bucketer.on_bucket_full do |bucket_id|
+    p "yay bucket #{bucket_id} filled up!"
+
+    bucketer.pop_all(bucket_id) do |items|
+      EM.stop
+      items.each do |item|
+        p "got back #{item}"
+      end
+    end
+  end
+
+  bucketer.add_item("1", {:foo => :bar})
+  bucketer.add_item("1", {:foo => :bar})
+  bucketer.add_item("1", {:foo => :bar})
+  bucketer.add_item("1", {:bar => :foo})
+  bucketer.add_item("1", {:bar => :foo})
+end
+```
+
+## Unordered Bucketer
+The unordered bucketer requires you to pass in an 'id' which is used to ensure
+that no duplicates occur. This bucketer type should be used if you want to not
+have two of the same item in a bucket at one time. This type of bucketer does
+not guarantee that you get back items in the same order that they went in.
+
+### Usage
 
 ```ruby
 require 'em-bucketer'
