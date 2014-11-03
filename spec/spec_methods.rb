@@ -7,4 +7,13 @@ module SpecMethods
     end
     EM::Iterator.new(0...n).each(worker, blk)
   end
+
+  def add_n_items_ordered(bucketer, bucket, n, &blk)
+    worker = proc do |i, iter|
+      bucketer.add_item(bucket, {:id => i}) do
+        iter.next
+      end
+    end
+    EM::Iterator.new(0...n).each(worker, blk)
+  end
 end
