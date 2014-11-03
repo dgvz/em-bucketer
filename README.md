@@ -30,12 +30,34 @@ order in which they were put in.
 ```ruby
 require 'em-bucketer'
 EM.run do
+
+  ## InMemory with pop_all example
   bucketer = EM::Bucketer::Ordered::InMemory.new(:bucket_threshold_size => 5)
 
   bucketer.on_bucket_full do |bucket_id|
     p "yay bucket #{bucket_id} filled up!"
 
     bucketer.pop_all(bucket_id) do |items|
+      EM.stop
+      items.each do |item|
+        p "got back #{item}"
+      end
+    end
+  end
+
+  bucketer.add_item("1", {:foo => :bar})
+  bucketer.add_item("1", {:foo => :bar})
+  bucketer.add_item("1", {:foo => :bar})
+  bucketer.add_item("1", {:bar => :foo})
+  bucketer.add_item("1", {:bar => :foo})
+
+  ## Redis with pop_count example
+  bucketer = EM::Bucketer::Ordered::Redis.new("my_prefix", :bucket_threshold_size => 5)
+
+  bucketer.on_bucket_full do |bucket_id|
+    p "yay bucket #{bucket_id} filled up!"
+
+    bucketer.pop_count(bucket_id, 5) do |items|
       EM.stop
       items.each do |item|
         p "got back #{item}"
@@ -62,6 +84,7 @@ not guarantee that you get back items in the same order that they went in.
 ```ruby
 require 'em-bucketer'
 EM.run do
+
   bucketer = EM::Bucketer::InMemory.new(:bucket_threshold_size => 5)
 
   bucketer.on_bucket_full do |bucket_id|
