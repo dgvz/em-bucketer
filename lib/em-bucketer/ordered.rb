@@ -5,4 +5,4 @@ end
 
 require 'eventmachine'
 require 'em-bucketer/ordered/in_memory'
-#require 'em-bucketer/ordered/redis'
+require 'em-bucketer/ordered/redis'

@@ -1,11 +1,11 @@
 require 'eventmachine'
-require 'em-bucketer/database/redis'
-require 'em-bucketer/base'
+require 'em-bucketer/ordered/database/redis'
+require 'em-bucketer/ordered/base'
 
 module EventMachine::Bucketer
-  class Redis
-    include Database::Redis
-    include Base
+  class Ordered::Redis
+    include Ordered::Database::Redis
+    include Ordered::Base
 
     BUCKET_THRESHOLD_SIZE_DEFAULT = 1000
     BUCKET_MAX_AGE_DEFAULT = 3600

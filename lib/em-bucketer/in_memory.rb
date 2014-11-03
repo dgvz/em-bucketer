@@ -19,6 +19,7 @@ module EventMachine::Bucketer
     # can remain before the on_bucket_timed_out is called
     def initialize(bucket_threshold_size: BUCKET_THRESHOLD_SIZE_DEFAULT, bucket_max_age: BUCKET_MAX_AGE_DEFAULT)
       setup(bucket_threshold_size, bucket_max_age)
+      setup_db
     end
   end
 end

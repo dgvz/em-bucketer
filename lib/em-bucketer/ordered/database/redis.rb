@@ -1,18 +1,28 @@
-require 'em-bucketer/database'
+require 'em-bucketer/ordered/database'
 require 'em-hiredis'
 
 module EventMachine::Bucketer
-  module Database
+  module Ordered::Database
     module Redis
       private
 
       def setup_db
+        redis.register_script(:lpopn, <<-END)
+          local r = redis.call('lrange', KEYS[1], 0, ARGV[1] - 1)
+          redis.call('ltrim', KEYS[1], ARGV[1], -1)
+          return r
+        END
+        redis.register_script(:lpopa, <<-END)
+          local r = redis.call('lrange', KEYS[1], 0, - 1)
+          redis.call('del', KEYS[1])
+          return r
+        END
       end
 
       def bucket_size_from_db(bucket_id, &blk)
         EM::Completion.new.tap do |c|
           c.callback(&blk) if block_given?
-          redis.hlen(redis_key(bucket_id)).callback do |len|
+          redis.llen(redis_key(bucket_id)).callback do |len|
             c.succeed len.to_i
           end.errback do |e|
             c.fail e
@@ -20,10 +30,10 @@ module EventMachine::Bucketer
         end
       end
 
-      def add_bucket_to_db(bucket_id, item_id, item, &blk)
+      def add_item_to_db(bucket_id, item, &blk)
         EM::Completion.new.tap do |c|
           c.callback(&blk) if block_given?
-          redis.hset(redis_key(bucket_id), item_id, Marshal.dump(item)).callback do
+          redis.rpush(redis_key(bucket_id), Marshal.dump(item)).callback do
             add_to_known_buckets(bucket_id).callback do
               c.succeed
             end.errback do |e|
@@ -35,19 +45,38 @@ module EventMachine::Bucketer
         end
       end
 
+      def pop_all_from_db(bucket_id, &blk)
+        EM::Completion.new.tap do |c|
+          c.callback(&blk) if block_given?
+          redis.lpopa([redis_key(bucket_id)]).callback do |data|
+            bucket = data.map { |d| Marshal.load(d) }
+            c.succeed bucket
+          end.errback do |e|
+            c.fail e
+          end
+        end
+      end
+
+      def pop_count_from_db(bucket_id, count, &blk)
+        EM::Completion.new.tap do |c|
+          c.callback(&blk) if block_given?
+          redis.lpopn([redis_key(bucket_id)], count).callback do |data|
+            bucket = data.map { |d| Marshal.load(d) }
+            c.succeed bucket
+          end.errback do |e|
+            c.fail e
+          end
+        end
+      end
+
       def get_bucket_from_db(bucket_id, &blk)
         EM::Completion.new.tap do |c|
           c.callback(&blk) if block_given?
-          redis.hgetall(redis_key(bucket_id)) do |data|
-            bucket = {}
-            index = 0
-            while(index < data.size)
-              bucket[data[index]] = Marshal.load(data[index + 1])
-              index += 2
-            end
+          redis.lrange(redis_key(bucket_id), 0, -1).callback do |data|
+            bucket = data.map { |d| Marshal.load(d) }
             c.succeed bucket
           end.errback do |e|
-            c.errback
+            c.fail e
           end
         end
       end
@@ -80,11 +109,11 @@ module EventMachine::Bucketer
       end
 
       def redis_key(bucket_id)
-        "em_bucketer:#{redis_prefix}:#{bucket_id}"
+        "em_bucketer_ordered:#{redis_prefix}:#{bucket_id}"
       end
 
       def redis_known_buckets_key
-        "em_bucketer_known_buckets:#{redis_prefix}"
+        "em_bucketer_ordered_known_buckets:#{redis_prefix}"
       end
     end
   end

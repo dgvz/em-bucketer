@@ -1,9 +1,13 @@
-require 'em-bucketer/database'
+require 'em-bucketer/ordered/database'
 
 module EventMachine::Bucketer
   module Database
     module Hash
       private
+
+      def setup_db
+        @buckets = {}
+      end
 
       def bucket_size_from_db(bucket_id, &blk)
         EM::Completion.new.tap do |c|

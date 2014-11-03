@@ -3,7 +3,6 @@ module EventMachine::Bucketer
     def setup(bucket_threshold_size, bucket_max_age)
       @bucket_threshold_size = bucket_threshold_size
       @bucket_max_age = bucket_max_age
-      @buckets = {}
       @on_bucket_full_callbacks = []
       @on_bucket_timeout_callbacks = []
       @timers = {}

@@ -6,6 +6,10 @@ module EventMachine::Bucketer
       module Hash
         private
 
+        def setup_db
+          @buckets = {}
+        end
+
         def pop_all_from_db(bucket_id, &blk)
           EM::Completion.new.tap do |c|
             c.callback(&blk) if block_given?
