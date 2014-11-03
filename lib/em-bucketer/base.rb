@@ -153,11 +153,9 @@ module EventMachine::Bucketer
     private
 
     def get_and_remove_iterator(bucket_id, count, values, completion)
-      added = 0
       proc do |tuple, iter|
         key, val = tuple[0], tuple[1]
-        if added < count
-          added += 1
+        if values.count < count
           values << val
           iter.next
         else
