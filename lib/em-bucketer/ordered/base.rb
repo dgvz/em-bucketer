@@ -42,10 +42,10 @@ module EventMachine::Bucketer
     # @yield [Array] the first `count`
     # items in the bucket
     def pop_count(bucket_id, count, reset_timer: true, &blk)
+      reset_timer(bucket_id) if reset_timer
       EM::Completion.new.tap do |c|
         c.callback(&blk) if block_given?
-        pop_count_from_db(bucket_id, count, &blk).callback do |items|
-          reset_timer(bucket_id) if reset_timer
+        pop_count_from_db(bucket_id, count).callback do |items|
           c.succeed items
         end.errback do |e|
           c.fail e
@@ -63,7 +63,7 @@ module EventMachine::Bucketer
       clear_timer(bucket_id)
       EM::Completion.new.tap do |c|
         c.callback(&blk) if block_given?
-        pop_all_from_db(bucket_id, &blk).callback do |items|
+        pop_all_from_db(bucket_id).callback do |items|
           c.succeed items
         end.errback do |e|
           c.fail e
@@ -152,6 +152,12 @@ module EventMachine::Bucketer
       end
     end
 
+    def bucket_empty?(bucket_id, &blk)
+      bucket_size_from_db(bucket_id).callback do |size|
+        blk.call size == 0
+      end
+    end
+
     def check_bucket_full(bucket_id)
       bucket_full?(bucket_id) do |is_full|
         if is_full
@@ -184,7 +190,9 @@ module EventMachine::Bucketer
     def reset_timer(bucket_id)
       return unless @bucket_max_age
       clear_timer(bucket_id)
-      @timers[bucket_id] = EM::Timer.new(@bucket_max_age, timeout_callback(bucket_id))
+      bucket_empty?(bucket_id) do |is_empty|
+        @timers[bucket_id] = EM::Timer.new(@bucket_max_age, timeout_callback(bucket_id)) unless is_empty
+      end
     end
   end
 end
