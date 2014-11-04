@@ -28,7 +28,7 @@ order in which they were put in.
 ### Usage
 
 ```ruby
-require 'em-bucketer'
+require 'em-bucketer/ordered'
 EM.run do
 
   ## InMemory with pop_all example
