@@ -8,13 +8,9 @@ module EventMachine::Bucketer
       @timers = {}
     end
 
-    # Adds a item to the specified bucket and
-    # calls the block when it is done
-    #
-    # @param bucket_id [String] the bucket id of
-    # the bucket to put the item in
-    # @param item [Object] the item to be
-    # placed in the bucket
+    # Adds a item to the specified bucket and calls the block when it is done
+    # @param bucket_id [String] the bucket id of the bucket to put the item in
+    # @param item [Object] the item to be placed in the bucket
     def add_item(bucket_id, item, &blk)
       add_timer_if_first(bucket_id)
       EM::Completion.new.tap do |c|
@@ -28,19 +24,12 @@ module EventMachine::Bucketer
       end
     end
 
-    # Get at most `count` items back from a
-    # specific bucket and remove them from
-    # the bucket. These should be the first
-    # `count` items you added to the bucket
-    # that have not yet been removed from the
-    # bucket.
-    #
-    # @param bucket_id [String] the bucket id
-    # you want the items from
-    # @param count [Integer] the number of
-    # items you want from the bucket
-    # @yield [Array] the first `count`
-    # items in the bucket
+    # Get at most `count` items back from a specific bucket and remove them
+    # from the bucket. These should be the first `count` items you added to the
+    # bucket that have not yet been removed from the bucket.
+    # @param bucket_id [String] the bucket id you want the items from
+    # @param count [Integer] the number of items you want from the bucket
+    # @yield [Array] the first `count` items in the bucket
     def pop_count(bucket_id, count, reset_timer: true, &blk)
       reset_timer(bucket_id) if reset_timer
       EM::Completion.new.tap do |c|
@@ -56,8 +45,7 @@ module EventMachine::Bucketer
     # Get all items back from a specific bucket
     # and remove them from the bucket.
     #
-    # @param bucket_id [String] the bucket id
-    # you want the items from
+    # @param bucket_id [String] the bucket id you want the items from
     # @yield [Array] all items in the bucket
     def pop_all(bucket_id, &blk)
       clear_timer(bucket_id)
@@ -71,31 +59,23 @@ module EventMachine::Bucketer
       end
     end
 
-    # Used to set a callback hook for when a bucket
-    # reaches the threshold size. It is IMPORTANT
-    # to note that the bucket will not automatically
-    # be emptied you must call empty_bucket if you
-    # want the bucket to be emptied. Also the callback
-    # will be called every time a item is added
-    # until the bucket is emptied.
+    # Used to set a callback hook for when a bucket reaches the threshold size.
+    # It is IMPORTANT to note that the bucket will not automatically be emptied
+    # you must call empty_bucket if you want the bucket to be emptied. Also the
+    # callback will be called every time a item is added until the bucket is
+    # emptied.
     #
     # @yield [String] The bucket id of the full bucket
-    def on_bucket_full(&blk)
-      @on_bucket_full_callbacks << blk
-    end
+    def on_bucket_full(&blk) @on_bucket_full_callbacks << blk end
 
-    # Used to set a callback hook for when a bucket
-    # reaches the time limit. It is IMPORTANT
-    # to note that the bucket will not automatically
-    # be emptied you must call empty_bucket if you
-    # want the bucket to be emptied.
+    # Used to set a callback hook for when a bucket reaches the time limit. It
+    # is IMPORTANT to note that the bucket will not automatically be emptied
+    # you must call empty_bucket if you want the bucket to be emptied.
     #
-    # This timer is started once the bucket gets its
-    # first item and is cleared only when the
-    # bucket is emptied. The callback will only be
-    # called once at this time and then not again
-    # unless you empty the bucket and add something
-    # again.
+    # This timer is started once the bucket gets its first item and is cleared
+    # only when the bucket is emptied. The callback will only be called once at
+    # this time and then not again unless you empty the bucket and add
+    # something again.
     #
     # @yield [String] The bucket id of the full bucket
     def on_bucket_timeout(&blk)
@@ -104,18 +84,15 @@ module EventMachine::Bucketer
 
     # Get the contents of a bucket.
     #
-    # @param bucket_id [String] the bucket id
-    # of the bucket you want to get
-    # @yield [Array] the items you put
-    # into the bucket
+    # @param bucket_id [String] the bucket id of the bucket you want to get
+    # @yield [Array] the items you put into the bucket
     def get_bucket(bucket_id, &blk)
       get_bucket_from_db(bucket_id, &blk)
     end
 
     # Empty a bucket
     #
-    # @param bucket_id [String] the bucket id
-    # of the bucket you want to empty
+    # @param bucket_id [String] the bucket id of the bucket you want to empty
     def empty_bucket(bucket_id, &blk)
       EM::Completion.new.tap do |c|
         c.callback(&blk) if block_given?
